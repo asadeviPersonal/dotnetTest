@@ -13,14 +13,14 @@ jobs:
       - run:
           name: Build solution
           command: dotnet build 
+#       - run:
+#           name: Run tests 
+#           command: dotnet test --no-build --logger "trx;LogFileName=xunit-output.xml" 
       - run:
           name: Run tests 
-          command: dotnet test --no-build --logger "trx;LogFileName=xunit-output.xml" 
-      - run:
-          name: Run tests 
-          command: dotnet test --no-build --logger "trx;LogFileName=/root/project/tests/TestResult/xunit-output.xml"
+          command: dotnet test --no-build --logger "trx;LogFileName=/root/project/tests/xunit-output.xml"
       - store_artifacts:
-          path: /root/project/tests/TestResult/
+          path: /root/project/tests/
           when: always
       - run:
           name: coverage
@@ -35,8 +35,8 @@ jobs:
             --settings coverlet.runsettings
             --results-directory './'
             
-      - store_artifacts:
-          path: ./../
+#       - store_artifacts:
+#           path: ./../
           
       - run: 
           command: export PATH="$PATH:/root/.dotnet/tools"
