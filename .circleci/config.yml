@@ -1,0 +1,71 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: mcr.microsoft.com/dotnet/core/sdk:2.2
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
+      - image: mcr.microsoft.com/dotnet/sdk:5.0
+    steps:
+      - checkout
+      - run:
+          name: Restore solution
+          command: dotnet restore 
+      - run:
+          name: Build solution
+          command: dotnet build 
+      - run:
+          name: Run tests 
+          command: dotnet test --no-build --logger "trx;LogFileName=xunit-output.xml" 
+      - run:
+          name: Run tests 
+          command: dotnet test --no-build --logger "trx;LogFileName=/root/project/tests/TestResult/xunit-output.xml"
+      - store_artifacts:
+          path: /root/project/tests/TestResult/
+          when: always
+      - run:
+          name: coverage
+          command: dotnet test --no-build -v n --results-directory:test_coverage --collect:"XPlat Code Coverage"
+#           command: dotnet test -c Debug -v minimal 
+#             --no-build 
+#             --collect:"XPlat Code Coverage" 
+#             --results-directory './project/coverage/'
+#           command: dotnet test -c Debug -v minimal 
+#             --no-build 
+#             --collect:"XPlat Code Coverage" 
+#             --settings coverlet.runsettings
+#             --results-directory './'
+            
+      - store_artifacts:
+          path: test_coverage
+          
+      - run: 
+          command: export PATH="$PATH:/root/.dotnet/tools"
+          name: pakage
+          
+      - run:
+          name: install report
+          command: | 
+            dotnet tool install --global dotnet-reportgenerator-globaltool --version 4.7.1
+            dotnet tool install dotnet-reportgenerator-globaltool --tool-path tools --version 4.7.1
+            dotnet new tool-manifest
+            dotnet tool install dotnet-reportgenerator-globaltool --version 4.7.1
+            export PATH="$PATH:/root/.dotnet/tools"
+      - run:
+          command: | 
+                dotnet reportgenerator \
+                  "-reports:./*/coverage.cobertura.xml" \
+                  "-targetdir:./coveragereportHTML" \
+                  -reporttypes:Html
+#           command: |
+#               reportgenerator \
+#                 -reports:./CodeCoverageResults/../coverage.cobertura.xml \
+#                 -targetdir:./coveragereportHTML \
+#                 -verbosity:Off
+          name: Generate code coverage report
+#           command: dotnet $(asadeviPersonal)\.nuget\packages\reportgenerator\x.y.z\tools\netcoreapp3.0\ReportGenerator.dll \
+#                   "-reports:./CodeCoverageResults/../coverage.cobertura.xml" \
+#                   "-targetdir:./coveragereportHTML" \
+#                   -reporttypes:Html
+                  
+      - store_artifacts:
+          path: ./coveragereportHTML
